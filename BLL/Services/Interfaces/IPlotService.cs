@@ -6,6 +6,6 @@ namespace BLL.Services.Interfaces
     {
         void PlotTrainingCurve(IEnumerable<double> errors, int epochCount);
 
-        void PlotTrainingAndValidationCurves(IEnumerable<double> errors, IEnumerable<double> validationErrors, int epochCount);
+        void PlotValidationCurve(IEnumerable<double> errors, int epochCount);
     }
 }

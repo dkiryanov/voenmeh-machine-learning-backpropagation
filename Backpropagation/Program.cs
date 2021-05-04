@@ -54,7 +54,7 @@ namespace Backpropagation
 
                 // validate network while we are training
                 double validationError = NetworkValidationService
-                    .Validate(validation, 
+                    .Validate(training, 
                                 network,
                                 LabelColumns, 
                                 FeatureColumns);
@@ -63,7 +63,7 @@ namespace Backpropagation
                 Console.WriteLine($"Эпоха: {i}, Ошибка: {error}");
             }
 
-            PlotService.PlotTrainingAndValidationCurves(errors, validationErrors, EpochCount);
+            PlotService.PlotValidationCurve(validationErrors, EpochCount);
             PlotService.PlotTrainingCurve(errors, EpochCount);
 
             PrintValidationReport(network, NetworkValidationService, training);

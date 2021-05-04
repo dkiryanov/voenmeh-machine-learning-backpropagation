@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Accord.Math;
+using Accord.Math.Optimization.Losses;
 using Accord.Neuro;
 using BLL.Models;
 using BLL.Services.Interfaces;
@@ -11,14 +11,6 @@ namespace BLL.Services.Implementations
 {
     public class NetworkValidationService : INetworkValidationService
     {
-        //private static Dictionary<string, string> _symbols = new Dictionary<string, string>()
-        //{
-        //    {"1000", "8"},
-        //    {"0100", "9"},
-        //    {"0010", "Ы"},
-        //    {"0001", "Р"}
-        //};
-
         private readonly Dictionary<int, string> _symbolEncodings;
 
         public NetworkValidationService()
@@ -42,38 +34,30 @@ namespace BLL.Services.Implementations
             double[][] validationFeatures = validation.Columns[featureColumns].ToArray2D<double>().ToJagged();
             double[][] validationLabels = validation.Columns[labelColumns].ToArray2D<double>().ToJagged();
 
-            List<double> result = new List<double>();
+            double[][] expected = new double[validation.RowKeys.Count()][];
+            double[][] actual = new double[validation.RowKeys.Count()][];
 
             for (int i = 0; i < validation.RowKeys.Count(); i++)
             {
                 double[] feature = validationFeatures[i];
                 double[] label = validationLabels[i];
 
-                double[] predictions = network.Compute(feature);
-
                 List<int> symbolEncoding = label.Select(v => (int)v).ToList();
-                string symbol = String.Join("", symbolEncoding);
-                int symbolIndex = _symbolEncodings.First(v => v.Value == symbol).Key;
+                string symbol = string.Join("", symbolEncoding);
+                int expectedSymbolIndex = _symbolEncodings.First(v => v.Value == symbol).Key;
 
-                // calculate best prediction
-                var best = Enumerable.Range(0, 4)
-                    .Select(v => new { Digit = _symbolEncodings[v], Prediction = predictions[v] })
-                    .OrderByDescending(v => v.Prediction)
-                    .First();
+                PredictionInfoModel prediction = ValidateSingleFeature(network, feature);
+                int actualSymbolIndex = _symbolEncodings.First(v => v.Value == prediction.Symbol).Key;
 
-                // count incorrect predictions
-                if (best.Digit != symbol)
-                {
-                    double symbolPrediction = predictions[symbolIndex];
-                    result.Add(1 - symbolPrediction);
-                }
-                else
-                {
-                    result.Add(1 - best.Prediction);
-                }
+                expected[i] = new double[] { expectedSymbolIndex };
+                actual[i] = new double[] { actualSymbolIndex };
             }
 
-            return result.Average();
+            return new SquareLoss(expected)
+            {
+                Root = false,
+                Mean = false
+            }.Loss(actual);
         }
 
         public PredictionInfoModel ValidateSingleFeature(ActivationNetwork network, double[] feature)

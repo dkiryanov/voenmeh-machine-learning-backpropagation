@@ -27,29 +27,20 @@ namespace BLL.Services.Implementations
             ScatterplotBox.Show(plot);
         }
 
-        public void PlotTrainingAndValidationCurves(
-            IEnumerable<double> errors, 
-            IEnumerable<double> validationErrors, 
-            int epochCount)
+        public void PlotValidationCurve(IEnumerable<double> errors, int epochCount)
         {
-            IEnumerable<double> tmp = Enumerable
+            double[] x = Enumerable
                 .Range(1, epochCount)
                 .Select(v => (double)v)
-                .ToList();
-
-            double[] x = tmp.Concat(tmp).ToArray();
-            double[] y = errors.Concat(validationErrors).ToArray();
-            int[] z = Enumerable
-                .Repeat(1, epochCount)
-                .Concat(Enumerable.Repeat(2, epochCount))
                 .ToArray();
 
-            Scatterplot plot = new Scatterplot(
-                TrainingAndValidationPlotResources.Title, 
-                TrainingAndValidationPlotResources.XAxisTitle,
-                TrainingAndValidationPlotResources.YAxisTitle);
+            double[] y = errors.ToArray();
 
-            plot.Compute(x, y, z);
+            Scatterplot plot = new Scatterplot(
+                "График изменения квадратичной ошибки тестирования",
+                TrainingPlotResources.YAxisTitle,
+                "Ошибки тестирования");
+            plot.Compute(x, y);
 
             ScatterplotBox.Show(plot);
         }
